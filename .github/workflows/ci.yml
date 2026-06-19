@@ -37,12 +37,27 @@ jobs:
       - name: Build the DAR
         run: daml build
 
+      # The gate: the passing suite in daml/Test.daml. A non-zero exit fails CI.
       - name: Run Daml Script unit tests (dpm trace test)
         run: |
           PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
             --daml daml \
+            --files daml/Test.daml \
             --dar .daml/dist/asset-tests-1.0.0.dar \
             --junit dpm-trace-results.xml \
+            --no-trees \
+            --color always
+
+      # A deliberately failing test (daml/FailureDemo.daml), shown to demonstrate
+      # how dpm trace maps a failure to source. Non-blocking: continue-on-error
+      # keeps the build green while the source-mapped failure appears in the log.
+      - name: Failure demo (source-mapped, non-gating)
+        continue-on-error: true
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+            --daml daml \
+            --files daml/FailureDemo.daml \
+            --dar .daml/dist/asset-tests-1.0.0.dar \
             --no-trees \
             --color always
 

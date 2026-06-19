@@ -23,7 +23,8 @@ runs anywhere a Daml toolchain runs.
 
 ```
 daml/Asset.daml   # an IOU-style Asset contract: Transfer, Split, Burn, ensure quantity > 0
-daml/Test.daml    # Daml Script unit tests: happy paths + submitMustFail guards
+daml/Test.daml    # Daml Script unit tests: happy paths + submitMustFail guards (the gate)
+daml/FailureDemo.daml      # one deliberately failing test, to show source-mapped failures
 .github/workflows/ci.yml   # GitHub Actions CI using `dpm trace test` as the gate
 run-demo.sh       # green run -> inject a regression -> red run -> revert
 ```
