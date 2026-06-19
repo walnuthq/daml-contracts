@@ -87,14 +87,16 @@ package's DAR, allocates `Alice`/`Bob`, runs the suite, and tears Canton down.
 ```bash
 dpm trace test . --integration itests \
   --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
-  --daml daml
+  --daml daml \
+  --parties Alice@1,Bob@2
 ```
 
 Each test submits against the live ledger and asserts on the resulting trace:
 
 - `asset-create.test` — issue an Asset and trace the committed transaction.
-- `asset-issue-to-bob.test` — Alice issues an Asset owned by Bob; check Bob's
-  participant projection sees it (party-scoped visibility on a real ledger).
+- `asset-issue-to-bob.test` — **cross-participant**: Alice (participant1) issues
+  an Asset owned by Bob (participant2); the same update is traced from Bob's
+  separate participant via `%ledger2` (run with `--parties Alice@1,Bob@2`).
 - `asset-split-rejected.test` — a Split the contract rejects; the live rejection
   is captured and mapped back to the Asset source line ("why did it fail").
 

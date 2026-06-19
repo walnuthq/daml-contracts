@@ -1,8 +1,11 @@
-# Integration test (multi-party): Alice issues an Asset owned by Bob, then we
-# trace it from Bob's projection -- Bob is an observer, so his participant view
-# shows the contract. This exercises party-scoped visibility on a real ledger.
+# Integration test (cross-participant): Alice on participant1 issues an Asset
+# owned by Bob, whose party is hosted on participant2. We submit via Alice's
+# participant (%ledger) and trace the SAME committed update from Bob's separate
+# participant (%ledger2) -- proving the contract is visible across participants
+# on the shared synchronizer. Run the suite with --parties Alice@1,Bob@2.
 #
-# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice --template '#asset-tests:Asset:Asset' --arg issuer=%alice --arg owner=%bob --arg name=SILVER --arg quantity=50) && %dpm trace "$ID" --submitter %ledger --read-as %bob --color never | FileCheck %s
+# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice --template '#asset-tests:Asset:Asset' --arg issuer=%alice --arg owner=%bob --arg name=SILVER --arg quantity=50) \
+# RUN:   && %dpm trace "$ID" --submitter %ledger2 --read-as %bob --wait 30 --color never | FileCheck %s
 
 # CHECK: Canton trace
 # CHECK: CREATE Asset:Asset

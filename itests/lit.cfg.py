@@ -27,6 +27,8 @@ config.environment["PYTHONPATH"] = os.environ.get("DPM_TRACE_IT_SRC", "")
 
 config.substitutions.append(("%daml-yaml", os.environ.get("DPM_TRACE_IT_DAML_YAML", "")))
 config.substitutions.append(("%damlc", os.environ.get("DPM_TRACE_IT_DAML", "daml")))
+# %ledger2 must precede %ledger -- otherwise "%ledger" matches inside "%ledger2".
+config.substitutions.append(("%ledger2", os.environ.get("DPM_TRACE_IT_LEDGER2", "")))
 config.substitutions.append(("%ledger", ledger))
 config.substitutions.append(("%alice", os.environ.get("DPM_TRACE_IT_ALICE", "")))
 config.substitutions.append(("%bob", os.environ.get("DPM_TRACE_IT_BOB", "")))
