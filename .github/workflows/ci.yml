@@ -11,6 +11,11 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
+    # daml test writes Unicode into its transaction HTML; a non-UTF-8 locale makes
+    # damlc abort with "commitAndReleaseBuffer: invalid argument (invalid character)".
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
       - name: Check out this package
         uses: actions/checkout@v4
