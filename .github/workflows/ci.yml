@@ -1,8 +1,8 @@
 name: daml-tests
 
 # Runs the Daml Script unit tests through `dpm trace test` on every push/PR.
-# The command returns a non-zero exit code when any test fails, so it gates CI
-# directly, and it maps failed tests back to source in the job log.
+# A failing test makes the command exit non-zero, so it gates CI directly, and
+# failures are mapped back to source in the job log.
 
 on:
   push:
@@ -12,19 +12,29 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out this package
+        uses: actions/checkout@v4
+
+      # Fetch the dpm-trace tool from GitHub as a CI step.
+      - name: Check out dpm-trace
+        uses: actions/checkout@v4
+        with:
+          repository: walnuthq/dpm-trace
+          path: dpm-trace
 
       - name: Install Daml SDK
         run: |
           curl -sSL https://get.daml.com/ | sh -s 3.4.11
           echo "$HOME/.daml/bin" >> "$GITHUB_PATH"
 
-      - name: Get dpm-trace
-        run: git clone --depth 1 https://github.com/walnuthq/dpm-trace.git "$RUNNER_TEMP/dpm-trace"
+      # Build the DAR so dpm trace test can verify failure text against the
+      # compiled package with `damlc inspect` (the --dar flag below).
+      - name: Build the DAR
+        run: daml build
 
       - name: Run Daml Script unit tests (dpm trace test)
         run: |
-          PYTHONPATH="$RUNNER_TEMP/dpm-trace/src" python3 -m dpm_trace.cli test . \
+          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
             --daml daml \
             --dar .daml/dist/asset-tests-1.0.0.dar \
             --junit dpm-trace-results.xml \
