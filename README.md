@@ -25,7 +25,9 @@ runs anywhere a Daml toolchain runs.
 daml/Asset.daml   # an IOU-style Asset contract: Transfer, Split, Burn, ensure quantity > 0
 daml/Test.daml    # Daml Script unit tests: happy paths + submitMustFail guards (the gate)
 daml/FailureDemo.daml      # one deliberately failing test, to show source-mapped failures
-.github/workflows/ci.yml   # GitHub Actions CI using `dpm trace test` as the gate
+itests/           # integration tests (lit) that run against a real local Canton
+.github/workflows/ci.yml          # unit-test CI gate (dpm trace test)
+.github/workflows/integration.yml # integration CI (managed Canton + lit)
 run-demo.sh       # green run -> inject a regression -> red run -> revert
 ```
 
@@ -75,12 +77,29 @@ FAIL  testCannotIssueZero
                ^
 ```
 
-## CI/CD
+## Integration tests (real Canton)
 
-`.github/workflows/ci.yml` is a complete example. The key line is just:
+The `itests/` directory holds `lit` integration tests that run against a **real
+local Canton node**. `dpm trace test --integration` boots Canton, deploys this
+package's DAR, allocates `Alice`/`Bob`, runs the suite, and tears Canton down:
 
 ```bash
-dpm trace test . --junit dpm-trace-results.xml --no-trees
+dpm trace test . --integration itests \
+  --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
+  --daml daml
+```
+
+Each test submits against the live ledger and asserts on the resulting trace —
+e.g. `itests/asset-issue-to-bob.test` issues an Asset owned by Bob and checks
+Bob's participant projection sees it. Needs `lit` and `FileCheck` on PATH; CI is
+in `.github/workflows/integration.yml`.
+
+## CI/CD
+
+`.github/workflows/ci.yml` is the unit-test gate. The key line is just:
+
+```bash
+dpm trace test . --files daml/Test.daml --junit dpm-trace-results.xml --no-trees
 ```
 
 A non-zero exit fails the job; the JUnit XML is uploaded for the test-report UI;

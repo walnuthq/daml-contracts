@@ -3,3 +3,5 @@
 *.bak
 *.sed
 dpm-trace-results.xml
+.lit/
+itests/.lit/

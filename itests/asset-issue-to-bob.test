@@ -1,0 +1,11 @@
+# Integration test (multi-party): Alice issues an Asset owned by Bob, then we
+# trace it from Bob's projection -- Bob is an observer, so his participant view
+# shows the contract. This exercises party-scoped visibility on a real ledger.
+#
+# REQUIRES: canton
+# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice --template '#asset-tests:Asset:Asset' --arg issuer=%alice --arg owner=%bob --arg name=SILVER --arg quantity=50) && %dpm trace "$ID" --submitter %ledger --read-as %bob --color never | FileCheck %s
+
+# CHECK: Canton trace
+# CHECK: CREATE Asset:Asset
+# CHECK: signatories: Alice
+# CHECK: name: SILVER{{.*}}quantity: 50

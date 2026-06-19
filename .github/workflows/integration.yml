@@ -1,0 +1,44 @@
+name: integration
+
+# Integration tests against a real local Canton node. Heavier than the unit-test
+# gate (boots Canton), so it runs on demand and on pushes to main.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    steps:
+      - name: Check out this package
+        uses: actions/checkout@v4
+
+      - name: Check out dpm-trace
+        uses: actions/checkout@v4
+        with:
+          repository: walnuthq/dpm-trace
+          path: dpm-trace
+
+      - name: Install Daml SDK (includes the Canton jar)
+        run: |
+          curl -sSL https://get.daml.com/ | sh -s 3.4.11
+          echo "$HOME/.daml/bin" >> "$GITHUB_PATH"
+
+      - name: Install lit + FileCheck
+        run: |
+          python3 -m pip install --user lit
+          sudo apt-get update && sudo apt-get install -y llvm
+          command -v FileCheck || sudo ln -sf "$(ls /usr/lib/llvm-*/bin/FileCheck | head -1)" /usr/local/bin/FileCheck
+
+      - name: Run integration suite (managed Canton)
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+            --integration itests \
+            --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
+            --daml daml \
+            --color always
