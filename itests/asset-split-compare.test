@@ -1,0 +1,34 @@
+# Integration test: compare Split 50/50 vs Split 70/30 with dpm trace compare.
+#
+# Issuer creates two Asset contracts owned by Alice (tokenId T-A and T-B,
+# each with balance=100).  Alice exercises Split on each with a different
+# splitQuantity (50 vs 70) and dpm trace compare diffs the two resulting
+# transaction trees.
+#
+# RUN: CREATE_A=$(%dpm submit --submitter %ledger --act-as %issuer \
+# RUN:   --read-as %alice \
+# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --arg issuer=%issuer --arg owner=%alice --arg name=GOLD --arg quantity=100) \
+# RUN:   && CID_A=$(%dpm "$CREATE_A" --submitter %ledger --read-as %alice --print-json \
+# RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
+# RUN:   && SPLIT_A=$(%dpm submit --submitter %ledger --act-as %alice \
+# RUN:      --template '#asset-tests:Asset:Asset' --choice Split \
+# RUN:      --contract-id "$CID_A" --arg splitQuantity=50) \
+# RUN:   && CREATE_B=$(%dpm submit --submitter %ledger --act-as %issuer \
+# RUN:   --read-as %alice \
+# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --arg issuer=%issuer --arg owner=%alice --arg name=SILVER --arg quantity=100) \
+# RUN:   && CID_B=$(%dpm "$CREATE_B" --submitter %ledger --read-as %alice --print-json \
+# RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
+# RUN:   && SPLIT_B=$(%dpm submit --submitter %ledger --act-as %alice \
+# RUN:      --template '#asset-tests:Asset:Asset' --choice Split \
+# RUN:      --contract-id "$CID_B" --arg splitQuantity=70) \
+# RUN:   && %dpm compare "$SPLIT_A" "$SPLIT_B" \
+# RUN:      --submitter %ledger --read-as %alice --dar %dar \
+# RUN:      --color never | FileCheck %s
+
+# CHECK: DPM trace comparison
+# CHECK: kind: update-vs-update
+# CHECK: result: visible differences found
+# CHECK: Updates
+# CHECK: same shape

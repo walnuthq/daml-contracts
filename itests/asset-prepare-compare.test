@@ -1,0 +1,29 @@
+# Integration test: compare a prepared Transfer against the committed transaction.
+#
+# Issuer creates an Asset owned by Alice.
+# Alice prepares (non-committing) a Transfer to Bob, then submits it.
+#
+# RUN: CREATE_ID=$(%dpm submit --submitter %ledger --act-as %issuer \
+# RUN:   --read-as %alice \
+# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --arg issuer=%issuer --arg owner=%alice --arg name=GOLD --arg quantity=100) \
+# RUN:   && ASSET_CID=$(%dpm "$CREATE_ID" --submitter %ledger --read-as %alice --print-json \
+# RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
+# RUN:   && %dpm prepare --submitter %ledger --act-as %alice \
+# RUN:      --read-as %issuer --read-as %bob \
+# RUN:      --template '#asset-tests:Asset:Asset' --choice Transfer \
+# RUN:      --contract-id "$ASSET_CID" --arg newOwner=%bob \
+# RUN:      --export %t.json \
+# RUN:   && TRANSFER_ID=$(%dpm submit --submitter %ledger --act-as %alice \
+# RUN:      --read-as %issuer --read-as %bob \
+# RUN:      --template '#asset-tests:Asset:Asset' --choice Transfer \
+# RUN:      --contract-id "$ASSET_CID" --arg newOwner=%bob) \
+# RUN:   && %dpm compare --prepared %t.json --update "$TRANSFER_ID" \
+# RUN:      --submitter %ledger --read-as %alice --dar %dar \
+# RUN:      --color never | FileCheck %s
+
+# CHECK: DPM trace comparison
+# CHECK: kind: prepared-vs-update
+# CHECK: result: no visible differences
+# CHECK: shape: matches
+# CHECK: values: match
