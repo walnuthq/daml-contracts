@@ -61,7 +61,7 @@ suite over, and tears down. (The `itests/` scaffolding came from
 dpm trace test . --integration itests \
   --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
   --daml daml \
-  --parties Alice@1,Bob@2 \
+  --parties Alice@1,Bob@2,Issuer@1 \
   --verbose
 ```
 

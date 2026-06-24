@@ -41,6 +41,6 @@ jobs:
             --integration itests \
             --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
             --daml daml \
-            --parties Alice@1,Bob@2 \
+            --parties Alice@1,Bob@2,Issuer@1 \
             --verbose \
             --color always
