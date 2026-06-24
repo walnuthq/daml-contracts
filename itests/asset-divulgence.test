@@ -1,0 +1,32 @@
+# Integration test: Divulgence.
+#
+# Alice creates an Asset and transfers it to Bob.
+# The Transfer choice is consuming: it archives Alice's contract and creates a
+# new one with owner=Bob.
+#
+# Divulgence check: Alice sees the full TX tree
+# including the EXERCISE event.  Bob sees only the
+# resulting CREATE -- not the exercise on Alice's original contract.
+#
+# RUN: CREATE_ID=$(%dpm submit --submitter %ledger --act-as %alice \
+# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --arg issuer=%alice --arg owner=%alice --arg name=GOLD --arg quantity=100) \
+# RUN:   && CID=$(%dpm "$CREATE_ID" --submitter %ledger --read-as %alice --print-json \
+# RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
+# RUN:   && TRANSFER_ID=$(%dpm submit --submitter %ledger --act-as %alice --read-as %bob \
+# RUN:      --template '#asset-tests:Asset:Asset' --choice Transfer \
+# RUN:      --contract-id "$CID" --arg newOwner=%bob) \
+# RUN:   && %dpm trace "$TRANSFER_ID" --submitter %ledger --read-as %alice --color never > %t.alice \
+# RUN:   && %dpm trace "$TRANSFER_ID" --submitter %ledger2 --read-as %bob --wait 30 --color never > %t.bob \
+# RUN:   && FileCheck %s --input-file %t.alice --check-prefix ALICE \
+# RUN:   && FileCheck %s --input-file %t.bob --check-prefix BOB
+
+# ALICE: Canton trace
+# ALICE: EXERCISE Asset:Asset.Transfer
+# ALICE: CREATE Asset:Asset
+# ALICE: name: GOLD
+
+# BOB: Canton trace
+# BOB: CREATE Asset:Asset
+# BOB: name: GOLD
+# BOB-NOT: EXERCISE Asset:Asset.Transfer
