@@ -20,10 +20,11 @@
 # RUN:      --contract-id "$ASSET_CID" --arg newOwner=%bob) \
 # RUN:   && %dpm compare --prepared %t.json --update "$TRANSFER_ID" \
 # RUN:      --submitter %ledger --read-as %alice --dar %dar \
-# RUN:      --color never | FileCheck %s
+# RUN:      --full --color never | FileCheck %s
 
 # CHECK: DPM trace comparison
 # CHECK: kind: prepared-vs-update
 # CHECK: result: no visible differences
 # CHECK: shape: matches
-# CHECK: values: match
+# CHECK: Field diff
+# CHECK: (matches)

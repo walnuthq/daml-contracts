@@ -25,7 +25,7 @@
 # RUN:      --contract-id "$CID_B" --arg splitQuantity=70) \
 # RUN:   && %dpm compare "$SPLIT_A" "$SPLIT_B" \
 # RUN:      --submitter %ledger --read-as %alice --dar %dar \
-# RUN:      --color never | FileCheck %s
+# RUN:      --full --color never | FileCheck %s
 
 # CHECK: DPM trace comparison
 # CHECK: kind: update-vs-update
