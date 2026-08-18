@@ -26,6 +26,21 @@ if not ledger:
 python = os.environ.get("DPM_TRACE_IT_PYTHON", sys.executable)
 config.environment["PYTHONPATH"] = os.environ.get("DPM_TRACE_IT_SRC", "")
 
+# lit sanitizes the environment, so an instrumented (`go build -cover`) %dpm
+# would find GOCOVERDIR unset, warn on stderr and corrupt the output these
+# tests compare. Forwarded only when present.
+if os.environ.get("GOCOVERDIR"):
+    config.environment["GOCOVERDIR"] = os.environ["GOCOVERDIR"]
+
+# %dpm is the dpm-trace binary, supplied by the runner. There is no fallback:
+# running the suite against something else silently would be worse than
+# refusing to start.
+dpm = os.environ.get("DPM_TRACE_IT_DPM")
+if not dpm:
+    lit_config.fatal(
+        "DPM_TRACE_IT_DPM is not set; run this suite through "
+        "`dpm trace test --integration <dir>`")
+
 config.substitutions.append(("%daml-yaml", os.environ.get("DPM_TRACE_IT_DAML_YAML", "")))
 config.substitutions.append(("%damlc", os.environ.get("DPM_TRACE_IT_DAML", "daml")))
 # %ledger2 must precede %ledger -- otherwise "%ledger" matches inside "%ledger2".
@@ -36,4 +51,4 @@ config.substitutions.append(("%alice", os.environ.get("DPM_TRACE_IT_ALICE", ""))
 config.substitutions.append(("%bob", os.environ.get("DPM_TRACE_IT_BOB", "")))
 config.substitutions.append(("%dar", os.environ.get("DPM_TRACE_IT_DAR", "")))
 config.substitutions.append(("%python", python))
-config.substitutions.append(("%dpm", python + " -m dpm_trace.cli"))
+config.substitutions.append(("%dpm", dpm))

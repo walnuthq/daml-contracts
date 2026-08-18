@@ -23,6 +23,14 @@ jobs:
         with:
           repository: walnuthq/dpm-trace
           path: dpm-trace
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: dpm-trace/go.mod
+      # dpm-trace is a Go binary now; build it once and put it on PATH.
+      - name: Build dpm-trace
+        run: |
+          go build -C dpm-trace -o "$RUNNER_TEMP/dpm-trace" ./cmd/dpm-trace
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Install Daml SDK (includes the Canton jar)
         run: |
@@ -33,11 +41,13 @@ jobs:
         run: |
           python3 -m pip install --user lit
           sudo apt-get update && sudo apt-get install -y llvm
-          command -v FileCheck || sudo ln -sf "$(ls /usr/lib/llvm-*/bin/FileCheck | head -1)" /usr/local/bin/FileCheck
+          command -v FileCheck || sudo ln -sf \
+            "$(find /usr/lib -path '*/llvm-*/bin/FileCheck' -type f -print -quit)" \
+            /usr/local/bin/FileCheck
 
       - name: Run integration suite (managed Canton)
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+          dpm-trace test . \
             --integration itests \
             --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
             --daml daml \
@@ -48,7 +58,7 @@ jobs:
       - name: Failure demo (source-mapped, non-gating)
         continue-on-error: false
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+          dpm-trace test . \
             --integration itests/demos \
             --canton-jar "$HOME/.daml/sdk/3.4.11/canton/canton.jar" \
             --daml daml \
