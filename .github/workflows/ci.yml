@@ -26,6 +26,14 @@ jobs:
         with:
           repository: walnuthq/dpm-trace
           path: dpm-trace
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: dpm-trace/go.mod
+      # dpm-trace is a Go binary now; build it once and put it on PATH.
+      - name: Build dpm-trace
+        run: |
+          go build -C dpm-trace -o "$RUNNER_TEMP/dpm-trace" ./cmd/dpm-trace
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Install Daml SDK
         run: |
@@ -40,7 +48,7 @@ jobs:
       # The gate: the passing suite in daml/Test.daml. A non-zero exit fails CI.
       - name: Run Daml Script unit tests (dpm trace test)
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+          dpm-trace test . \
             --daml daml \
             --files daml/Test.daml \
             --dar .daml/dist/asset-tests-1.0.0.dar \
@@ -54,7 +62,7 @@ jobs:
       - name: Failure demo (source-mapped, non-gating)
         continue-on-error: false
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE/dpm-trace/src" python3 -m dpm_trace.cli test . \
+          dpm-trace test . \
             --daml daml \
             --files daml/FailureDemo.daml \
             --dar .daml/dist/asset-tests-1.0.0.dar \
