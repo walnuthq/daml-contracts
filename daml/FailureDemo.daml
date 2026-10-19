@@ -8,7 +8,7 @@
 -- non-blocking step (see .github/workflows/ci.yml) so the failure output is
 -- visible without failing the build. Run it directly with:
 --
---   dpm trace test . --files daml/FailureDemo.daml --dar .daml/dist/asset-tests-1.0.0.dar
+--   dpm trace test . --files daml/FailureDemo.daml --dar .daml/dist/asset-1.0.0.dar
 module FailureDemo where
 
 import Daml.Script

@@ -51,7 +51,7 @@ jobs:
           dpm-trace test . \
             --daml dpm \
             --files daml/Test.daml \
-            --dar .daml/dist/asset-tests-1.0.0.dar \
+            --dar .daml/dist/asset-1.0.0.dar \
             --junit dpm-trace-results.xml \
             --no-trees \
             --color always
@@ -65,7 +65,7 @@ jobs:
           dpm-trace test . \
             --daml dpm \
             --files daml/FailureDemo.daml \
-            --dar .daml/dist/asset-tests-1.0.0.dar \
+            --dar .daml/dist/asset-1.0.0.dar \
             --no-trees \
             --color always
 

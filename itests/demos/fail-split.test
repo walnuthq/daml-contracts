@@ -6,12 +6,12 @@
 # --verbose on the failing step), mirroring FailureDemo.daml for unit tests.
 #
 # RUN: CREATE_ID=$(%dpm submit --submitter %ledger --act-as %alice \
-# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --template '#asset:Asset:Asset' \
 # RUN:   --arg issuer=%alice --arg owner=%alice --arg name=GOLD --arg quantity=100) \
 # RUN:   && CID=$(%dpm "$CREATE_ID" --submitter %ledger --read-as %alice --print-json \
 # RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
 # RUN:   && %dpm submit --submitter %ledger --act-as %alice \
-# RUN:      --template '#asset-tests:Asset:Asset' --choice Split \
+# RUN:      --template '#asset:Asset:Asset' --choice Split \
 # RUN:      --contract-id "$CID" --arg splitQuantity=0 \
 # RUN:      --allow-fail --print-json > %t.json \
 # RUN:   && %dpm --completion-file %t.json --daml-yaml %daml-yaml --dar %dar --damlc %damlc --color never \

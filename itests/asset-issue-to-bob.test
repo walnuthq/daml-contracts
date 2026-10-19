@@ -4,7 +4,7 @@
 # participant (%ledger2) -- proving the contract is visible across participants
 # on the shared synchronizer. Run the suite with --parties Alice@1,Bob@2.
 #
-# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice --template '#asset-tests:Asset:Asset' --arg issuer=%alice --arg owner=%bob --arg name=SILVER --arg quantity=50) \
+# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice --template '#asset:Asset:Asset' --arg issuer=%alice --arg owner=%bob --arg name=SILVER --arg quantity=50) \
 # RUN:   && %dpm trace "$ID" --submitter %ledger2 --read-as %bob --wait 30 --color never | FileCheck %s
 
 # CHECK: Canton trace

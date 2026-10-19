@@ -1,4 +1,4 @@
-# asset-tests — Daml Script unit and Canton integration tests with `dpm trace test`
+# asset — Daml Script unit and Canton integration tests with `dpm trace test`
 
 A small, self-contained Daml package that shows how to run **unit tests** (on
 the in-memory IDE ledger) and **integration tests** (against a real local
@@ -46,7 +46,7 @@ dpm trace test . -p testSplit    # run a subset by pattern
 | `testStrangerCannotTransfer` | authorization rejection (`submitMustFail`) |
 | `testBadSplitFails` | in-choice `assertMsg` rejection (`submitMustFail`) |
 
-Pass `--dar .daml/dist/asset-tests-1.0.0.dar` to verify failure text against
+Pass `--dar .daml/dist/asset-1.0.0.dar` to verify failure text against
 the compiled package with `damlc inspect` before resolving it against local
 sources.
 

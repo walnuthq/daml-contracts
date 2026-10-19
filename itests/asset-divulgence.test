@@ -9,12 +9,12 @@
 # resulting CREATE -- not the exercise on Alice's original contract.
 #
 # RUN: CREATE_ID=$(%dpm submit --submitter %ledger --act-as %alice \
-# RUN:   --template '#asset-tests:Asset:Asset' \
+# RUN:   --template '#asset:Asset:Asset' \
 # RUN:   --arg issuer=%alice --arg owner=%alice --arg name=GOLD --arg quantity=100) \
 # RUN:   && CID=$(%dpm "$CREATE_ID" --submitter %ledger --read-as %alice --print-json \
 # RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
 # RUN:   && TRANSFER_ID=$(%dpm submit --submitter %ledger --act-as %alice --read-as %bob \
-# RUN:      --template '#asset-tests:Asset:Asset' --choice Transfer \
+# RUN:      --template '#asset:Asset:Asset' --choice Transfer \
 # RUN:      --contract-id "$CID" --arg newOwner=%bob) \
 # RUN:   && %dpm trace "$TRANSFER_ID" --submitter %ledger --read-as %alice --color never > %t.alice \
 # RUN:   && %dpm trace "$TRANSFER_ID" --submitter %ledger2 --read-as %bob --wait 30 --color never > %t.bob \
