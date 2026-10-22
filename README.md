@@ -4,7 +4,7 @@ A small, self-contained Daml package that shows how to run **unit tests** (on
 the in-memory IDE ledger) and **integration tests** (against a real local
 Canton node) through `dpm trace test`, and wire both into CI/CD.
 
-`dpm trace test` wraps `daml test` and adds what it does not:
+`dpm trace test` wraps `dpm test` and adds what it does not:
 
 - renders each script's **transaction tree** (creates, exercises, archives,
   `submitMustFail` guards, parties, arguments, source locations);

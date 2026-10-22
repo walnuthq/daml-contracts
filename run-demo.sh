@@ -8,24 +8,17 @@
 #                    returns a non-zero exit code (the CI gate).
 #   4. Revert      — restore the contract.
 #
-# Overrides: DAML=<daml|damlc|dpm> DPM_BIN=<dpm> DPM_HOME=<dpm home> COLOR=auto|always|never
+# Overrides: DAML=<dpm|damlc> DPM_BIN=<dpm> DPM_HOME=<dpm home> COLOR=auto|always|never
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COLOR="${COLOR:-auto}"
 
-# Resolve a Daml toolchain.
-# A bare name such as DAML=dpm is resolved on PATH.
-if [[ -n "${DAML:-}" ]]; then
-  DAML="$(command -v "$DAML" 2>/dev/null || echo "$DAML")"
-else
-  DAML="$(command -v daml 2>/dev/null || command -v dpm 2>/dev/null || true)"
-fi
-if [[ -z "${DAML}" ]]; then
-  DAML="$(ls -d "$HOME"/.daml/sdk/*/daml/daml 2>/dev/null | sort -V | tail -1 || true)"
-fi
+# Resolve the Daml toolchain; a bare name is resolved on PATH.
+DAML="${DAML:-dpm}"
+DAML="$(command -v "$DAML" 2>/dev/null || echo "$DAML")"
 if [[ ! -x "${DAML}" ]]; then
-  echo "error: no daml/damlc found; set DAML=<daml, damlc or dpm>" >&2
+  echo "error: cannot find dpm; set DAML=<dpm or damlc>" >&2
   exit 2
 fi
 
