@@ -40,31 +40,36 @@ jobs:
           curl -sSL https://get.digitalasset.com/install/install.sh | sh -s 3.5.1
           echo "$HOME/.dpm/bin" >> "$GITHUB_PATH"
 
-      # Build the DAR so dpm trace test can verify failure text against the
-      # compiled package with `damlc inspect` (the --dar flag below).
-      - name: Build the DAR
-        run: dpm build
+      # Builds asset and the unittests package that depends on its DAR. The
+      # asset daml.yaml and DAR passed below map failures into daml/Asset.daml
+      # and verify them with `damlc inspect`.
+      - name: Build the DARs
+        run: dpm build --all
 
-      # The gate: the passing suite in daml/Test.daml. A non-zero exit fails CI.
+      # The gate: the passing suite in unittests/daml/Test.daml. A non-zero exit fails CI.
       - name: Run Daml Script unit tests (dpm trace test)
         run: |
-          dpm-trace test . \
+          dpm-trace test unittests \
             --daml dpm \
             --files daml/Test.daml \
+            --daml-yaml unittests/daml.yaml \
+            --daml-yaml daml.yaml \
             --dar .daml/dist/asset-1.0.0.dar \
             --junit dpm-trace-results.xml \
             --no-trees \
             --color always
 
-      # A deliberately failing test (daml/FailureDemo.daml), shown to demonstrate
+      # A deliberately failing test (unittests/daml/FailureDemo.daml), shown to demonstrate
       # how dpm trace maps a failure to source. Non-blocking: continue-on-error
       # keeps the build green while the source-mapped failure appears in the log.
       - name: Failure demo (source-mapped, non-gating)
         continue-on-error: false
         run: |
-          dpm-trace test . \
+          dpm-trace test unittests \
             --daml dpm \
             --files daml/FailureDemo.daml \
+            --daml-yaml unittests/daml.yaml \
+            --daml-yaml daml.yaml \
             --dar .daml/dist/asset-1.0.0.dar \
             --no-trees \
             --color always

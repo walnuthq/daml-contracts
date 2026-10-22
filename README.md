@@ -17,10 +17,11 @@ Canton node) through `dpm trace test`, and wire both into CI/CD.
 ## Layout
 
 ```
-daml/Asset.daml        IOU-style Asset: Transfer, Split, Burn, ensure quantity > 0
-daml/Test.daml         Script unit tests — happy paths + submitMustFail guards
-daml/FailureDemo.daml  one deliberately failing test (non-gating source-mapped demo)
-itests/                lit integration tests against a real local Canton
+daml/Asset.daml                  IOU-style Asset: Transfer, Split, Burn, ensure quantity > 0
+unittests/daml/Test.daml         Script unit tests — happy paths + submitMustFail guards
+unittests/daml/FailureDemo.daml  one deliberately failing test (non-gating source-mapped demo)
+multi-package.yaml               builds asset and unittests together
+itests/                          lit integration tests against a real local Canton
 .github/workflows/     ci.yml = unit gate, integration.yml = integration gate
 run-demo.sh            green run -> inject a regression -> red run -> revert
 ```
@@ -30,11 +31,16 @@ run-demo.sh            green run -> inject a regression -> red run -> revert
 Run on the in-memory IDE ledger — **no Canton node** — so they run anywhere
 a Daml toolchain runs.
 
+The Script tests are a separate package, `unittests/`, that depends on the
+asset DAR. That keeps daml-script out of the DAR uploaded to a ledger. Build
+both first:
+
 ```bash
-dpm trace test .                 # run every Script test, render trees, gate on failures
-dpm trace test . --no-trees      # summary + failures only (compact CI logs)
-dpm trace test . --print-json    # machine-readable report
-dpm trace test . -p testSplit    # run a subset by pattern
+dpm build --all
+dpm trace test unittests                 # run every Script test, render trees, gate on failures
+dpm trace test unittests --no-trees      # summary + failures only (compact CI logs)
+dpm trace test unittests --print-json    # machine-readable report
+dpm trace test unittests -p testSplit    # run a subset by pattern
 ```
 
 | Test | What it exercises |
@@ -46,9 +52,16 @@ dpm trace test . -p testSplit    # run a subset by pattern
 | `testStrangerCannotTransfer` | authorization rejection (`submitMustFail`) |
 | `testBadSplitFails` | in-choice `assertMsg` rejection (`submitMustFail`) |
 
-Pass `--dar .daml/dist/asset-1.0.0.dar` to verify failure text against
-the compiled package with `damlc inspect` before resolving it against local
-sources.
+To map a failure into the contract as well as the test, pass the asset
+package's sources and DAR. `--daml-yaml` replaces the default, so name both:
+
+```bash
+dpm trace test unittests \
+  --daml-yaml unittests/daml.yaml --daml-yaml daml.yaml \
+  --dar .daml/dist/asset-1.0.0.dar
+```
+
+The DAR is verified with `damlc inspect` before local sources are searched.
 
 ## Integration tests
 
@@ -90,7 +103,9 @@ Two GitHub Actions workflows, both fetching `dpm-trace` via `actions/checkout`:
 - **`ci.yml`** — the unit gate, runs on every push/PR. The key line:
 
   ```bash
-  dpm trace test . --files daml/Test.daml --junit dpm-trace-results.xml --no-trees
+  dpm trace test unittests --files daml/Test.daml \
+    --daml-yaml unittests/daml.yaml --daml-yaml daml.yaml \
+    --dar .daml/dist/asset-1.0.0.dar --junit dpm-trace-results.xml --no-trees
   ```
 
   A non-zero exit fails the job; the JUnit XML is uploaded for the test-report

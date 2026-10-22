@@ -8,7 +8,7 @@
 #                    returns a non-zero exit code (the CI gate).
 #   4. Revert      — restore the contract.
 #
-# Overrides: DAML=<daml|damlc> DPM_BIN=<dpm> DPM_HOME=<dpm home> COLOR=auto|always|never
+# Overrides: DAML=<daml|damlc|dpm> DPM_BIN=<dpm> DPM_HOME=<dpm home> COLOR=auto|always|never
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,12 +16,17 @@ DPM_TRACE_REPO="${DPM_TRACE_REPO:-$(cd "$HERE/../dpm-trace" 2>/dev/null && pwd |
 COLOR="${COLOR:-auto}"
 
 # Resolve a Daml toolchain.
-DAML="${DAML:-$(command -v daml 2>/dev/null || true)}"
+# A bare name such as DAML=dpm is resolved on PATH.
+if [[ -n "${DAML:-}" ]]; then
+  DAML="$(command -v "$DAML" 2>/dev/null || echo "$DAML")"
+else
+  DAML="$(command -v daml 2>/dev/null || command -v dpm 2>/dev/null || true)"
+fi
 if [[ -z "${DAML}" ]]; then
   DAML="$(ls -d "$HOME"/.daml/sdk/*/daml/daml 2>/dev/null | sort -V | tail -1 || true)"
 fi
 if [[ ! -x "${DAML}" ]]; then
-  echo "error: no daml/damlc found; set DAML=<path to daml or damlc>" >&2
+  echo "error: no daml/damlc found; set DAML=<daml, damlc or dpm>" >&2
   exit 2
 fi
 
@@ -39,10 +44,19 @@ run_trace() {
   fi
 }
 
+# Map failures into daml/Asset.daml, not only the test call site.
+ASSET_SOURCES=(--daml-yaml "$HERE/unittests/daml.yaml" --daml-yaml "$HERE/daml.yaml" --dar "$HERE/.daml/dist/asset-1.0.0.dar")
+# Script tests are a separate package on top of the asset DAR; rebuild both.
+build_all() {
+  local log
+  log="$(cd "$HERE" && "$DAML" build --all 2>&1)" || { echo "$log" >&2; exit 2; }
+}
+
 rule() { printf '\n\033[1m=== %s ===\033[0m\n\n' "$1"; }
 
 rule "1) Green run: all Daml Script unit tests pass (full transaction trees)"
-run_trace test "$HERE" --daml "$DAML" --color "$COLOR"
+build_all
+run_trace test "$HERE/unittests" --files daml/Test.daml "${ASSET_SOURCES[@]}" --daml "$DAML" --color "$COLOR"
 
 rule "2) Inject a regression: weaken 'ensure quantity > 0' to '>= 0' in daml/Asset.daml"
 ASSET="$HERE/daml/Asset.daml"
@@ -57,7 +71,8 @@ PY
 echo "patched daml/Asset.daml (the zero-quantity guard is now broken)"
 
 rule "3) Red run: the guard test fails; dpm trace maps it to source and fails the build"
-run_trace test "$HERE" --daml "$DAML" --no-trees --color "$COLOR"
+build_all
+run_trace test "$HERE/unittests" --files daml/Test.daml "${ASSET_SOURCES[@]}" --daml "$DAML" --no-trees --color "$COLOR"
 RED_EXIT=$?
 echo
 echo "CI gate exit code from the red run: ${RED_EXIT}  (non-zero => the CI job fails)"
