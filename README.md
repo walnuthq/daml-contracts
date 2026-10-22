@@ -37,10 +37,11 @@ both first:
 
 ```bash
 dpm build --all
-dpm trace test unittests                 # run every Script test, render trees, gate on failures
-dpm trace test unittests --no-trees      # summary + failures only (compact CI logs)
-dpm trace test unittests --print-json    # machine-readable report
-dpm trace test unittests -p testSplit    # run a subset by pattern
+dpm trace test unittests                                      # all tests
+dpm trace test unittests --files daml/Test.daml               # only Test.daml
+dpm trace test unittests --files daml/Test.daml --no-trees    # no transaction trees
+dpm trace test unittests --files daml/Test.daml --print-json  # JSON report
+dpm trace test unittests --files daml/Test.daml -p testSplit  # tests matching a pattern
 ```
 
 | Test | What it exercises |

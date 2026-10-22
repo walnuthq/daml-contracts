@@ -12,7 +12,6 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DPM_TRACE_REPO="${DPM_TRACE_REPO:-$(cd "$HERE/../dpm-trace" 2>/dev/null && pwd || true)}"
 COLOR="${COLOR:-auto}"
 
 # Resolve a Daml toolchain.
@@ -30,19 +29,13 @@ if [[ ! -x "${DAML}" ]]; then
   exit 2
 fi
 
-# Resolve dpm trace: prefer the installed dpm plugin, else the repo's Python CLI.
-run_trace() {
-  if [[ -n "${DPM_BIN:-}" ]]; then
-    DPM_HOME="${DPM_HOME:-$DPM_TRACE_REPO/.dpm-home}" "${DPM_BIN}" trace "$@"
-  elif command -v dpm >/dev/null 2>&1 && [[ -n "${DPM_TRACE_REPO}" ]]; then
-    DPM_HOME="${DPM_HOME:-$DPM_TRACE_REPO/.dpm-home}" dpm trace "$@"
-  elif [[ -n "${DPM_TRACE_REPO}" ]]; then
-    PYTHONPATH="$DPM_TRACE_REPO/src" python3 -m dpm_trace.cli "$@"
-  else
-    echo "error: cannot find dpm or the dpm-trace repo; set DPM_BIN or DPM_TRACE_REPO" >&2
-    exit 2
-  fi
-}
+# dpm trace runs as a dpm plugin; DPM_HOME, if set, is inherited, else dpm uses its own home.
+DPM_BIN="${DPM_BIN:-dpm}"
+if ! command -v "$DPM_BIN" >/dev/null 2>&1; then
+  echo "error: cannot find dpm; set DPM_BIN" >&2
+  exit 2
+fi
+run_trace() { "$DPM_BIN" trace "$@"; }
 
 # Map failures into daml/Asset.daml, not only the test call site.
 ASSET_SOURCES=(--daml-yaml "$HERE/unittests/daml.yaml" --daml-yaml "$HERE/daml.yaml" --dar "$HERE/.daml/dist/asset-1.0.0.dar")
