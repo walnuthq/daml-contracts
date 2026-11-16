@@ -34,8 +34,15 @@ jobs:
 
       - name: Install DPM and the Daml SDK (includes the Canton jar)
         run: |
-          curl -sSL https://get.digitalasset.com/install/install.sh | sh -s 3.5.1
+          curl -sSL https://get.digitalasset.com/install/install.sh | sh -s 3.7.1
           echo "$HOME/.dpm/bin" >> "$GITHUB_PATH"
+
+      # Fetch the git-pinned Splice DARs into ~/.dpm/cache; dpm build does not fetch them.
+      - name: Fetch git DAR dependencies
+        run: |
+          dpm install package
+          (cd unittests && dpm install package)
+          dpm update --check
 
       - name: Install lit + FileCheck
         run: |
@@ -49,7 +56,7 @@ jobs:
         run: |
           dpm-trace test . \
             --integration itests \
-            --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.5.1/lib/canton-open-source-3.5.1.jar" \
+            --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.7.1/lib/canton-open-source-3.7.1.jar" \
             --daml dpm \
             --parties Alice@1,Bob@2,Issuer@1 \
             --verbose \
@@ -60,7 +67,7 @@ jobs:
         run: |
           dpm-trace test . \
             --integration itests/demos \
-            --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.5.1/lib/canton-open-source-3.5.1.jar" \
+            --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.7.1/lib/canton-open-source-3.7.1.jar" \
             --daml dpm \
             --parties Alice@1,Bob@2,Issuer@1 \
             --verbose \

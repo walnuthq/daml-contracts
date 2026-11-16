@@ -73,7 +73,7 @@ suite over, and tears down. (The `itests/` scaffolding came from
 
 ```bash
 dpm trace test . --integration itests \
-  --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.5.1/lib/canton-open-source-3.5.1.jar" \
+  --canton-jar "$HOME/.dpm/cache/components/canton-open-source/3.7.1/lib/canton-open-source-3.7.1.jar" \
   --daml dpm \
   --parties Alice@1,Bob@2,Issuer@1 \
   --verbose

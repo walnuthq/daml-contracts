@@ -37,8 +37,15 @@ jobs:
 
       - name: Install DPM and the Daml SDK
         run: |
-          curl -sSL https://get.digitalasset.com/install/install.sh | sh -s 3.5.1
+          curl -sSL https://get.digitalasset.com/install/install.sh | sh -s 3.7.1
           echo "$HOME/.dpm/bin" >> "$GITHUB_PATH"
+
+      # Fetch the git-pinned Splice DARs into ~/.dpm/cache; dpm build does not fetch them.
+      - name: Fetch git DAR dependencies
+        run: |
+          dpm install package
+          (cd unittests && dpm install package)
+          dpm update --check
 
       # Builds asset and the unittests package that depends on its DAR. The
       # asset daml.yaml and DAR passed below map failures into daml/Asset.daml
