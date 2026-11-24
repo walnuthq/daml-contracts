@@ -3,17 +3,17 @@
 # Issuer creates an AssetRegistry, issues GOLD once (ok), then tries to issue
 # GOLD again — the assertMsg guard rejects it with DAML_FAILURE.
 #
-# RUN: REG_ID=$(%dpm submit --submitter %ledger --act-as %issuer \
+# RUN: REG_ID=$(%dpm submit --submitter %ledger %auth --act-as %issuer \
 # RUN:   --template '#asset:Asset:AssetRegistry' \
 # RUN:   --arg issuer=%issuer --arg activeIds=[]) \
-# RUN:   && REG_CID=$(%dpm "$REG_ID" --submitter %ledger --read-as %issuer --print-json \
+# RUN:   && REG_CID=$(%dpm "$REG_ID" --submitter %ledger %auth --read-as %issuer --print-json \
 # RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("contractId")))') \
-# RUN:   && ISSUE1_ID=$(%dpm submit --submitter %ledger --act-as %issuer --read-as %alice \
+# RUN:   && ISSUE1_ID=$(%dpm submit --submitter %ledger %auth --act-as %issuer --read-as %alice \
 # RUN:      --template '#asset:Asset:AssetRegistry' --choice IssueAsset \
 # RUN:      --contract-id "$REG_CID" --arg owner=%alice --arg name=GOLD --arg quantity=100) \
-# RUN:   && REG_CID2=$(%dpm "$ISSUE1_ID" --submitter %ledger --read-as %issuer --print-json \
+# RUN:   && REG_CID2=$(%dpm "$ISSUE1_ID" --submitter %ledger %auth --read-as %issuer --print-json \
 # RUN:      | %python -c 'import sys,json; d=json.load(sys.stdin); print(next(e["contractId"] for e in d["eventsById"].values() if e.get("kind")=="create" and "AssetRegistry" in e.get("template","")))') \
-# RUN:   && %dpm submit --submitter %ledger --act-as %issuer --read-as %alice \
+# RUN:   && %dpm submit --submitter %ledger %auth --act-as %issuer --read-as %alice \
 # RUN:      --template '#asset:Asset:AssetRegistry' --choice IssueAsset \
 # RUN:      --contract-id "$REG_CID2" --arg owner=%alice --arg name=GOLD --arg quantity=50 \
 # RUN:      --allow-fail --print-json > %t.json \

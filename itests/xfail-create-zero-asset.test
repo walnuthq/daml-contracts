@@ -5,10 +5,10 @@
 # like in the CI log (with --verbose) without breaking the gate.
 #
 # XFAIL: *
-# RUN: ID=$(%dpm submit --submitter %ledger --act-as %alice \
+# RUN: ID=$(%dpm submit --submitter %ledger %auth --act-as %alice \
 # RUN:        --template '#asset:Asset:Asset' \
 # RUN:        --arg issuer=%alice --arg owner=%alice --arg name=ZERO --arg quantity=0) \
-# RUN:   && %dpm trace "$ID" --submitter %ledger --read-as %alice --color never | FileCheck %s
+# RUN:   && %dpm trace "$ID" --submitter %ledger %auth --read-as %alice --color never | FileCheck %s
 
 # CHECK: CREATE Asset:Asset
 # CHECK: name: ZERO{{.*}}quantity: 0
